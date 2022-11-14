@@ -28,5 +28,6 @@ def get_alarm():
     return 'Hello World!'
 
 
-if __name__ == '__main__':
-    app.run()
+def flask_server():
+    print('Flask is running...')
+    app.run(host='127.0.0.1', port='5000')
