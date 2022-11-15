@@ -7,9 +7,21 @@ con = None
 cur = None
 
 
+# CREATE TABLE robot (id STRING PRIMARY KEY, manufacturer STRING);
+# CREATE TABLE currentValue (ts INTEGER, robot_id STRING PRIMARY KEY, value STRING);
+# CREATE TABLE loggedValue (ts INTEGER, robot_id STRING, value STRING, PRIMARY KEY (ts, robot_id));
+# CREATE TABLE alarm (ts INTEGER, robot_id STRING, value STRING, PRIMARY KEY (ts, robot_id));
+
 def initialize():
     global con, cur
     con, cur = open_connection()
+    q1 = 'DELETE * FROM currentValue;'
+    q2 = 'DELETE * FROM loggedValue;'
+    q3 = 'DELETE * FROM alarm;'
+    cur.execute(q1)
+    cur.execute(q2)
+    cur.execute(q3)
+    con.commit()
 
 
 def open_connection():
@@ -62,14 +74,20 @@ def get_logged_values(robot_id, start_ts, end_ts):
 
 
 def get_alarm_by_robot(robot_id, start_ts, end_ts):
-    q = 'SELECT (ts, value) FROM alarm ' \
-        'WHERE robot_id = "' + robot_id + '" ' \
-        'AND ts BETWEEN ' + start_ts + ' AND ' + end_ts + ';'
-    res = cur.execute(q)
-    return EXIT_SUCCESS, res.fetchall()
+    is_valid = validate_robot(robot_id)
+
+    if is_valid:
+        q = 'SELECT (ts, value) FROM alarm ' \
+            'WHERE robot_id = "' + robot_id + '" ' \
+            'AND ts BETWEEN ' + start_ts + ' AND ' + end_ts + ';'
+        res = cur.execute(q)
+        return EXIT_SUCCESS, res.fetchall()
+
+    else:
+        return EXIT_FAILURE, None
 
 
-def get_all_alarm(robot_id, start_ts, end_ts):
+def get_all_alarm(start_ts, end_ts):
     q = 'SELECT (ts, robot_id, value) FROM alarm ' \
         'WHERE ts BETWEEN ' + start_ts + ' AND ' + end_ts + ';'
     res = cur.execute(q)
@@ -82,15 +100,25 @@ def save_value(robot_id, ts, value):
          'WHERE robot_id = ' + robot_id + ';'
     q2 = 'INSERT INTO loggedValue (robot_id, ts, value)' \
          'VALUES (' + robot_id + ', ' + ts + ', ' + value + ');'
-    cur.execute(q1)
-    cur.execute(q2)
-    con.commit()
-    return EXIT_SUCCESS
+
+    try:
+        cur.execute(q1)
+        cur.execute(q2)
+        con.commit()
+        return EXIT_SUCCESS
+
+    except con.error:
+        return EXIT_FAILURE
 
 
 def save_alarm(robot_id, ts, value):
     q = 'INSERT INTO loggedValue (robot_id, ts, value)' \
         'VALUES (' + robot_id + ', ' + ts + ', ' + value + ');'
-    cur.execute(q)
-    con.commit()
-    return EXIT_SUCCESS
+
+    try:
+        cur.execute(q)
+        con.commit()
+        return EXIT_SUCCESS
+
+    except con.error:
+        return EXIT_FAILURE
