@@ -15,9 +15,9 @@ cur = None
 def initialize():
     global con, cur
     con, cur = open_connection()
-    q1 = 'DELETE * FROM currentValue;'
-    q2 = 'DELETE * FROM loggedValue;'
-    q3 = 'DELETE * FROM alarm;'
+    q1 = 'DELETE FROM currentValue;'
+    q2 = 'DELETE FROM loggedValue;'
+    q3 = 'DELETE FROM alarm;'
     cur.execute(q1)
     cur.execute(q2)
     cur.execute(q3)
@@ -25,7 +25,7 @@ def initialize():
 
 
 def open_connection():
-    connection = sqlite3.connect("fastory.db")
+    connection = sqlite3.connect("fastory.db", check_same_thread=False)
     cursor = connection.cursor()
     return connection, cursor
 
@@ -50,7 +50,7 @@ def get_current_value(robot_id):
     is_valid = validate_robot(robot_id)
 
     if is_valid:
-        q = 'SELECT (ts, value) FROM currentValue ' \
+        q = 'SELECT ts, value FROM currentValue ' \
             'WHERE robot_id = "' + robot_id + '";'
         res = cur.execute(q)
         return EXIT_SUCCESS, res.fetchone()
@@ -63,9 +63,9 @@ def get_logged_values(robot_id, start_ts, end_ts):
     is_valid = validate_robot(robot_id)
 
     if is_valid:
-        q = 'SELECT (ts, value) FROM currentValue ' \
+        q = 'SELECT ts, value FROM currentValue ' \
             'WHERE robot_id = "' + robot_id + '" ' \
-            'AND ts BETWEEN ' + start_ts + ' AND ' + end_ts + ';'
+            'AND ts BETWEEN ' + str(start_ts) + ' AND ' + str(end_ts) + ';'
         res = cur.execute(q)
         return EXIT_SUCCESS, res.fetchall()
 
@@ -77,9 +77,9 @@ def get_alarm_by_robot(robot_id, start_ts, end_ts):
     is_valid = validate_robot(robot_id)
 
     if is_valid:
-        q = 'SELECT (ts, value) FROM alarm ' \
+        q = 'SELECT ts, value FROM alarm ' \
             'WHERE robot_id = "' + robot_id + '" ' \
-            'AND ts BETWEEN ' + start_ts + ' AND ' + end_ts + ';'
+            'AND ts BETWEEN ' + str(start_ts) + ' AND ' + str(end_ts) + ';'
         res = cur.execute(q)
         return EXIT_SUCCESS, res.fetchall()
 
@@ -88,8 +88,8 @@ def get_alarm_by_robot(robot_id, start_ts, end_ts):
 
 
 def get_all_alarm(start_ts, end_ts):
-    q = 'SELECT (ts, robot_id, value) FROM alarm ' \
-        'WHERE ts BETWEEN ' + start_ts + ' AND ' + end_ts + ';'
+    q = 'SELECT ts, robot_id, value FROM alarm ' \
+        'WHERE ts BETWEEN ' + str(start_ts) + ' AND ' + str(end_ts) + ';'
     res = cur.execute(q)
     return EXIT_SUCCESS, res.fetchall()
 

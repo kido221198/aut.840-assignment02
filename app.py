@@ -1,6 +1,6 @@
 from threading import Thread
 import time
-from repository import initialize
+from repository import initialize, close_connection
 from mqtt_runner import mqtt_client
 from transport import flask_server
 from endpoint import check_robots
