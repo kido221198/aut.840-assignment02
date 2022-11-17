@@ -72,16 +72,28 @@ input.del {
     align-items: center;
 }
 
-.body_style::before {
+.body_style::after {
     content: "";
 
     background-image: url("images/Tampere_University_logo.png");
     background-color: #f1f1f1;
     background-size: cover;
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    bottom: 0px;
-    left: 0px;
+    position: relative;
+    /*top: 0px;*/
+    /*right: 0px;*/
+    /*bottom: 0px;*/
+    /*left: 0px;*/
     opacity: 0.75;
 }
+
+.column {
+    float: left;
+    width: 50%;
+}
+
+.row {
+    content: "";
+    display: table;
+    clear: both;
+}
+

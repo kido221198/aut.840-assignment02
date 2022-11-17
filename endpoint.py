@@ -1,74 +1,100 @@
 import repository as rp
+from time import time
 
-EXIT_SUCCESS = False
-EXIT_FAILURE = True
+SUCCESS = 0
+CONFLICT = 1
+NOT_FOUND = 2
+UNKNOWN_ERROR = 9
+
+DEFAULT_TIME_RANGE = 86400000
 
 
 def get_latest_telemetry(robot_id):
-    err, res = rp.get_current_value(robot_id)
-
-    if err:
-        return EXIT_FAILURE, None, None
+    if rp.validate_robot(robot_id):
+        err, res = rp.get_current_value(robot_id)
+        return err, res
 
     else:
-        ts = res[0]
-        value = res[1]
-        return EXIT_SUCCESS, ts, value
+        return NOT_FOUND, None
+
+
+def get_latest_telemetries():
+    err, res = rp.get_current_values()
+    return err, res
 
 
 def get_history(robot_id, start_ts, end_ts):
-    err, res = rp.get_logged_values(robot_id, start_ts, end_ts)
+    if not end_ts:
+        end_ts = int(time())
 
-    if err:
-        return EXIT_FAILURE, None
+    if not start_ts:
+        start_ts = end_ts - DEFAULT_TIME_RANGE
+
+    if not start_ts < end_ts:
+        return CONFLICT, None
+
+    if rp.validate_robot(robot_id):
+        err, res = rp.get_logged_values(robot_id, start_ts, end_ts)
+        return SUCCESS, res
 
     else:
-        history = []
-
-        for record in res:
-            history.append({'ts': record[0], 'value': record[1]})
-
-        return EXIT_SUCCESS, history
+        return NOT_FOUND, None
 
 
 def save_telemetry(robot_id, ts, value):
-    rp.save_value(robot_id, ts, value)
-    return EXIT_SUCCESS
+    if not ts:
+        ts = int(time())
+
+    if rp.validate_robot(robot_id):
+        err = rp.save_value(robot_id, ts, value)
+        return err
+
+    else:
+        return NOT_FOUND
 
 
-def save_alarm(robot_id, ts, content):
-    rp.save_alarm(robot_id, ts, content)
-    return EXIT_SUCCESS
+def save_alarm(robot_id, ts, value):
+    if not ts:
+        ts = int(time())
+
+    if rp.validate_robot(robot_id):
+        err = rp.save_alarm(robot_id, ts, value)
+        return err
+
+    else:
+        return NOT_FOUND
 
 
 def get_alarm_robot(robot_id, start_ts, end_ts):
-    err, res = rp.get_alarm_by_robot(robot_id, start_ts, end_ts)
+    if not end_ts:
+        end_ts = int(time())
 
-    if err:
-        return EXIT_FAILURE, None
+    if not start_ts:
+        start_ts = end_ts - DEFAULT_TIME_RANGE
+
+    if not start_ts < end_ts:
+        return CONFLICT, None
+
+    if rp.validate_robot(robot_id):
+        err, res = rp.get_alarm_by_robot(robot_id, start_ts, end_ts)
+        return err, res
 
     else:
-        log = []
-
-        for record in res:
-            log.append({'ts': record[0], 'value': record[1]})
-
-        return EXIT_SUCCESS, log
+        return NOT_FOUND, None
 
 
 def get_alarms(start_ts, end_ts):
+    if not end_ts:
+        end_ts = int(time())
+
+    if not start_ts:
+        start_ts = end_ts - DEFAULT_TIME_RANGE
+
+    if not start_ts < end_ts:
+        return CONFLICT, None
+
     err, res = rp.get_all_alarm(start_ts, end_ts)
-
-    if err:
-        return EXIT_FAILURE, None
-
-    else:
-        log = []
-
-        for record in res:
-            log.append({'ts': record[0], 'robot_id': record[1], 'value': record[2]})
-
-        return EXIT_SUCCESS, log
+    return err, res
 
 
 def check_robots():

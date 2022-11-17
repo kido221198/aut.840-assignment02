@@ -2,6 +2,30 @@
 {% extends "base.html" %}
 <!-- begin block content here -->
 {% block content %}
-    <h1>Hello World!!!</h1>
+    <div>
+        <h1>Where to go?</h1>
+        <tr>
+            <td><a href="{{ url_for('index') }}">Home</a></td>
+            <td><a href="{{ url_for('robot_page') }}">Robots</a></td>
+            <td><a href="{{ url_for('alarm_page') }}">Alarms</a></td>
+        </tr>
+    </div>
+
+    <div class="row">
+        <div class="column">
+            <tr>
+                <td>Messages count: </td>
+            </tr>
+            <tr>
+                <td>Alarms count: </td>
+            </tr>
+            <tr>
+                <td>Alarms count: </td>
+            </tr>
+        </div>
+        <div class="column">
+
+        </div>
+    </div>
     <!-- end block content here -->
 {% endblock %}
