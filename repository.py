@@ -5,6 +5,15 @@ CONFLICT = 1
 NOT_FOUND = 2
 UNKNOWN_ERROR = 9
 
+
+class TermColor:
+    OK = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 con = None
 cur = None
 
@@ -127,19 +136,22 @@ def get_all_alarm(start_ts, end_ts):
 
 
 def save_value(robot_id, ts, value):
-    q1 = 'UPDATE currentValue' \
-         'SET ts = ' + str(ts) + ', value = ' + value + \
-         'WHERE robot_id = ' + robot_id + ';'
-    q2 = 'INSERT INTO loggedValue (robot_id, ts, value)' \
-         'VALUES (' + robot_id + ', ' + str(ts) + ', ' + value + ');'
+    # q1 = "UPDATE currentValue SET ts = {}, value = '{}' WHERE robot_id = '{}';".format(ts, value, robot_id)
 
+    q1 = "REPLACE INTO currentValue (robot_id, ts, value) VALUES ('{}', {}, '{}');".format(robot_id, ts, value)
+    q2 = "INSERT INTO loggedValue (robot_id, ts, value) VALUES ('{}', {}, '{}');".format(robot_id, ts, value)
     try:
+        print(TermColor.BOLD + q1)
+        print(TermColor.BOLD + q2)
         cur.execute(q1)
         cur.execute(q2)
+        print(TermColor.WARNING + 'DB is executing.. '),
         con.commit()
+        print(TermColor.OK + 'Done!')
         return SUCCESS
 
-    except con.error:
+    except con.Error as err:
+        print(TermColor.FAIL + 'SQLite error: %s' % (' '.join(err.args)))
         con.rollback()
         return UNKNOWN_ERROR
 
@@ -149,10 +161,14 @@ def save_alarm(robot_id, ts, value):
         'VALUES (' + robot_id + ', ' + ts + ', ' + value + ');'
 
     try:
+        print(TermColor.BOLD + q)
         cur.execute(q)
+        print(TermColor.WARNING + 'DB is executing.. '),
         con.commit()
+        print(TermColor.OK + 'Done!')
         return SUCCESS
 
-    except con.error:
+    except con.Error as err:
+        print(TermColor.FAIL + 'SQLite error: %s' % (' '.join(err.args)))
         con.rollback()
         return UNKNOWN_ERROR

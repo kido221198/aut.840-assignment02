@@ -1,31 +1,115 @@
-<!-- extend from "base.html" here -->
-{% extends "base.html" %}
-<!-- begin block content here -->
-{% block content %}
-    <div>
-        <h1>Where to go?</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="../static/styles.css" type="text/css">
+    <title>ROBOT</title>
+</head>
+<body>
+<div>
+    <h1>
         <tr>
-            <td><a href="{{ url_for('index') }}">Home</a></td>
-            <td><a href="{{ url_for('robot_page') }}">Robots</a></td>
+            <td><p>Robots</p></td>
             <td><a href="{{ url_for('alarm_page') }}">Alarms</a></td>
         </tr>
-    </div>
+    </h1>
 
-    <div class="row">
-        <div class="column">
-            <tr>
-                <td>Messages count: </td>
-            </tr>
-            <tr>
-                <td>Alarms count: </td>
-            </tr>
-            <tr>
-                <td>Alarms count: </td>
-            </tr>
-        </div>
-        <div class="column">
+</div>
 
+<div class="row">
+    <div class="column">
+        <div class="row">
+            <div class="column">
+                <div style="width: 340px; height: 208px; position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 1</h3>
+                        <div><p color="#8f8bbeff" id="state1">Getting state</p></div>
+                        <p>Last Updated: <span id="ts1"></span></p>
+                    </div>
+                </div>
+
+            </div>
+            <div class="column">
+                <div style="width: 340px; height: 208px; position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 2</h3>
+                        <div><p color="#8f8bbeff" id="state2">Getting state</p></div>
+                        <p>Last Updated: <span id="ts2"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div style="width: 340px; height: 208px; position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 3</h3>
+                        <div><p color="#8f8bbeff" id="state3">Getting state</p></div>
+                        <p>Last Updated: <span id="ts3"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="column" style="align-content: center">
+                <div style="width: 340px; height: 208px; position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 4</h3>
+                        <div><p color="#8f8bbeff" id="state4">Getting state</p></div>
+                        <p>Last Updated: <span id="ts4"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="column">
+                <div style="width: 340px; height: 208px; position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 5</h3>
+                        <div><p color="#8f8bbeff" id="state5">Getting state</p></div>
+                        <p>Last Updated: <span id="ts5"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div style="width: 340px; height: 208px; position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 6</h3>
+                        <div><p color="#8f8bbeff" id="state6">Getting state</p></div>
+                        <p>Last Updated: <span id="ts6"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div style="width: 340px; height: 208px; position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 7</h3>
+                        <div><p color="#8f8bbeff" id="state7">Getting state</p></div>
+                        <p>Last Updated: <span id="ts7"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div style="width: 340px; height: 208px; position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 8</h3>
+                        <div><p color="#8f8bbeff" id="state8">Getting state</p></div>
+                        <p>Last Updated: <span id="ts8"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="column">
+                <div style="width: 340px; height: 208px; position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 9</h3>
+                        <div><p color="#8f8bbeff" id="state9">Getting state</p></div>
+                        <p>Last Updated: <span id="ts9"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div style="width: 340px; height: 208px; position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 10</h3>
+                        <div><p color="#8f8bbeff" id="state10">Getting state</p></div>
+                        <p>Last Updated: <span id="ts10"></span></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- end block content here -->
-{% endblock %}
+    <div class="column">
+
+    </div>
+</div>
+</body>
+</html>

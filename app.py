@@ -6,12 +6,20 @@ from transport import flask_server
 from endpoint import check_robots
 
 
+class TermColor:
+    OK = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 def timed_checking():
-    print('Timer is running...')
+    print(TermColor.OK + 'Timer is running...')
     while True:
         # Invoke scanning every 60 secs
         time.sleep(60)
-        print('Start checking robots...')
+        print(TermColor.OK + 'Start checking robots...')
         check_robots()
 
 
@@ -31,6 +39,3 @@ if __name__ == "__main__":
     timer = Thread(target=timed_checking, name='timer')
     timer.start()
 
-
-
-# timer.join()
