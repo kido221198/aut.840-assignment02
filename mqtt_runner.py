@@ -1,5 +1,5 @@
 import endpoint as ep
-from common_var import TermColor
+from common_var import TermColor, TIMEZONE_DIFF
 from paho.mqtt import subscribe as subscribe
 from datetime import datetime
 from json import loads
@@ -24,7 +24,7 @@ def string_to_epoch(string):
     minute = int(string[14:16])
     second = int(string[17:19])
     millisecond = int(string[20:23])
-    epoch = int(datetime(year, month, day, hour, minute, second).strftime('%s')) * 1000 + millisecond
+    epoch = int(datetime(year, month, day, hour, minute, second).strftime('%s')) * 1000 + millisecond + TIMEZONE_DIFF
     return epoch
 
 
