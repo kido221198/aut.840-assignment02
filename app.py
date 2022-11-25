@@ -1,25 +1,18 @@
-from threading import Thread
-import time
-from repository import initialize, close_connection
+from repository import initialize
 from mqtt_runner import mqtt_client
 from transport import flask_server
 from endpoint import check_robots
-
-
-class TermColor:
-    OK = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+from common_var import TermColor
+from threading import Thread
+import time
 
 
 def timed_checking():
-    print(TermColor.OK + 'Timer is running...')
+    print(TermColor['OK'] + 'Timer is running...')
     while True:
         # Invoke scanning every 60 secs
         time.sleep(60)
-        print(TermColor.OK + 'Start checking robots...')
+        print(TermColor['OK'] + 'Start checking robots...')
         check_robots()
 
 

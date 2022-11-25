@@ -1,25 +1,18 @@
-import paho.mqtt.subscribe as subscribe
-from datetime import datetime
-import json
 import endpoint as ep
-
-
-class TermColor:
-    OK = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+from common_var import TermColor
+from paho.mqtt import subscribe as subscribe
+from datetime import datetime
+from json import loads
 
 
 def on_message(client, userdata, msg):
-    print(TermColor.BOLD + "Message received-> " + msg.topic + " " + str(msg.payload))  # Print a received msg
+    print(TermColor['NORMAL'] + "Message received-> " + msg.topic + " " + str(msg.payload))  # Print a received msg
     topic = msg.topic.split("/")
     robot_id = topic[2]
-    message = json.loads(msg.payload)
+    message = loads(msg.payload)
     state = message['state']
     ts = string_to_epoch(message['time'])
-    print(robot_id, state, ts)
+    print("Content:", robot_id, state, ts)
     ep.save_telemetry(robot_id, ts, state)
 
 
@@ -36,5 +29,5 @@ def string_to_epoch(string):
 
 
 def mqtt_client():
-    print(TermColor.OK + 'MQTT is running...')
+    print(TermColor['OK'] + 'MQTT is running...')
     subscribe.callback(on_message, "ii22/telemetry/+", hostname="broker.hivemq.com")

@@ -1,18 +1,5 @@
+from common_var import TermColor, Logic
 import sqlite3
-
-SUCCESS = 0
-CONFLICT = 1
-NOT_FOUND = 2
-UNKNOWN_ERROR = 9
-
-
-class TermColor:
-    OK = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
 
 con = None
 cur = None
@@ -51,10 +38,10 @@ def validate_robot(robot_id):
     cur.execute(q)
 
     if not cur.rowcount:
-        return NOT_FOUND
+        return Logic['NOT_FOUND']
 
     else:
-        return SUCCESS
+        return Logic['SUCCESS']
 
 
 def get_current_value(robot_id):
@@ -63,11 +50,11 @@ def get_current_value(robot_id):
     cur.execute(q)
 
     if not cur.rowcount:
-        return NOT_FOUND, None
+        return Logic['NOT_FOUND'], None
 
     else:
         res = dict(zip([col[0] for col in cur.description], cur[0]))
-        return SUCCESS, res
+        return Logic['SUCCESS'], res
 
 
 def get_current_values():
@@ -75,11 +62,11 @@ def get_current_values():
     cur.execute(q)
 
     if not cur.rowcount:
-        return NOT_FOUND, None
+        return Logic['NOT_FOUND'], None
 
     else:
         res = dict(zip([col[0] for col in cur.description], cur[0]))
-        return SUCCESS, res
+        return Logic['SUCCESS'], res
 
 
 def get_logged_values(robot_id, start_ts, end_ts):
@@ -89,7 +76,7 @@ def get_logged_values(robot_id, start_ts, end_ts):
     cur.execute(q)
 
     if not cur.rowcount:
-        return NOT_FOUND, None
+        return Logic['NOT_FOUND'], None
 
     else:
         res = []
@@ -97,7 +84,7 @@ def get_logged_values(robot_id, start_ts, end_ts):
         for row in cur.fetchall():
             res.append(dict(zip([col[0] for col in cur.description], row)))
 
-        return SUCCESS, res
+        return Logic['SUCCESS'], res
 
 
 def get_alarm_by_robot(robot_id, start_ts, end_ts):
@@ -107,7 +94,7 @@ def get_alarm_by_robot(robot_id, start_ts, end_ts):
     cur.execute(q)
 
     if not cur.rowcount:
-        return NOT_FOUND, None
+        return Logic['NOT_FOUND'], None
 
     else:
         res = []
@@ -115,7 +102,7 @@ def get_alarm_by_robot(robot_id, start_ts, end_ts):
         for row in cur.fetchall():
             res.append(dict(zip([col[0] for col in cur.description], row)))
 
-        return SUCCESS, res
+        return Logic['SUCCESS'], res
 
 
 def get_all_alarm(start_ts, end_ts):
@@ -124,7 +111,7 @@ def get_all_alarm(start_ts, end_ts):
     cur.execute(q)
 
     if not cur.rowcount:
-        return NOT_FOUND, None
+        return Logic['NOT_FOUND'], None
 
     else:
         res = []
@@ -132,7 +119,7 @@ def get_all_alarm(start_ts, end_ts):
         for row in cur.fetchall():
             res.append(dict(zip([col[0] for col in cur.description], row)))
 
-        return SUCCESS, res
+        return Logic['SUCCESS'], res
 
 
 def save_value(robot_id, ts, value):
@@ -141,19 +128,19 @@ def save_value(robot_id, ts, value):
     q1 = "REPLACE INTO currentValue (robot_id, ts, value) VALUES ('{}', {}, '{}');".format(robot_id, ts, value)
     q2 = "INSERT INTO loggedValue (robot_id, ts, value) VALUES ('{}', {}, '{}');".format(robot_id, ts, value)
     try:
-        print(TermColor.BOLD + q1)
-        print(TermColor.BOLD + q2)
+        print(TermColor['BOLD'] + q1)
+        print(TermColor['BOLD'] + q2)
         cur.execute(q1)
         cur.execute(q2)
-        print(TermColor.WARNING + 'DB is executing.. '),
+        print(TermColor['WARNING'] + 'DB is executing..', end=' ')
         con.commit()
-        print(TermColor.OK + 'Done!')
-        return SUCCESS
+        print(TermColor['OK'] + 'Done!')
+        return Logic['SUCCESS']
 
     except con.Error as err:
-        print(TermColor.FAIL + 'SQLite error: %s' % (' '.join(err.args)))
+        print(TermColor['FAIL'] + 'SQLite error: %s' % (' '.join(err.args)))
         con.rollback()
-        return UNKNOWN_ERROR
+        return Logic['UNKNOWN_ERROR']
 
 
 def save_alarm(robot_id, ts, value):
@@ -161,14 +148,14 @@ def save_alarm(robot_id, ts, value):
         'VALUES (' + robot_id + ', ' + ts + ', ' + value + ');'
 
     try:
-        print(TermColor.BOLD + q)
+        print(TermColor['BOLD'] + q)
         cur.execute(q)
-        print(TermColor.WARNING + 'DB is executing.. '),
+        print(TermColor['WARNING'] + 'DB is executing..', end=' ')
         con.commit()
-        print(TermColor.OK + 'Done!')
-        return SUCCESS
+        print(TermColor['OK'] + 'Done!')
+        return Logic['SUCCESS']
 
     except con.Error as err:
-        print(TermColor.FAIL + 'SQLite error: %s' % (' '.join(err.args)))
+        print(TermColor['FAIL'] + 'SQLite error: %s' % (' '.join(err.args)))
         con.rollback()
-        return UNKNOWN_ERROR
+        return Logic['UNKNOWN_ERROR']
