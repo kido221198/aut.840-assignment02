@@ -53,7 +53,10 @@ def get_current_value(robot_id):
         return Logic['NOT_FOUND'], None
 
     else:
-        res = dict(zip([col[0] for col in cur.description], cur[0]))
+        headers = [col[0] for col in cur.description]
+
+        res = dict(zip(headers, cur.fetchone()))
+
         return Logic['SUCCESS'], res
 
 
@@ -65,7 +68,12 @@ def get_current_values():
         return Logic['NOT_FOUND'], None
 
     else:
-        res = dict(zip([col[0] for col in cur.description], cur[0]))
+        res = []
+        headers = [col[0] for col in cur.description]
+
+        for row in cur.fetchall():
+            res.append(dict(zip(headers, row)))
+
         return Logic['SUCCESS'], res
 
 
@@ -80,9 +88,10 @@ def get_logged_values(robot_id, start_ts, end_ts):
 
     else:
         res = []
+        headers = [col[0] for col in cur.description]
 
         for row in cur.fetchall():
-            res.append(dict(zip([col[0] for col in cur.description], row)))
+            res.append(dict(zip(headers, row)))
 
         return Logic['SUCCESS'], res
 
@@ -98,9 +107,10 @@ def get_alarm_by_robot(robot_id, start_ts, end_ts):
 
     else:
         res = []
+        headers = [col[0] for col in cur.description]
 
         for row in cur.fetchall():
-            res.append(dict(zip([col[0] for col in cur.description], row)))
+            res.append(dict(zip(headers, row)))
 
         return Logic['SUCCESS'], res
 
@@ -115,9 +125,10 @@ def get_all_alarm(start_ts, end_ts):
 
     else:
         res = []
+        headers = [col[0] for col in cur.description]
 
         for row in cur.fetchall():
-            res.append(dict(zip([col[0] for col in cur.description], row)))
+            res.append(dict(zip(headers, row)))
 
         return Logic['SUCCESS'], res
 

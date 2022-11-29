@@ -11,9 +11,13 @@ def timed_checking():
     print(TermColor['OK'] + 'Timer is running...')
     while True:
         # Invoke scanning every 60 secs
-        time.sleep(60)
-        print(TermColor['OK'] + 'Start checking robots...')
-        check_robots()
+        try:
+            print(TermColor['OK'] + 'Start checking robots...')
+            check_robots()
+            time.sleep(60)
+
+        except Exception as e:
+            print(TermColor['FAIL'] + str(e))
 
 
 if __name__ == "__main__":
@@ -31,4 +35,3 @@ if __name__ == "__main__":
     # Create a thread to invoke robot scanning every 1 minute
     timer = Thread(target=timed_checking, name='timer')
     timer.start()
-

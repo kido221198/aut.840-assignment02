@@ -120,4 +120,10 @@ def get_alarms(start_ts, end_ts):
 
 
 def check_robots():
-    pass
+    err, res = rp.get_current_values()
+    # err, res = rp.get_current_value('rob1')
+
+    if err:
+        print(TermColor['FAIL'] + 'Endpoint error code:', str(err))
+
+    print(res)
