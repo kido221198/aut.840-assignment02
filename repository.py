@@ -45,7 +45,7 @@ def validate_robot(robot_id):
 
 
 def get_current_value(robot_id):
-    q = 'SELECT ts, value FROM currentValue ' \
+    q = 'SELECT ts, value, sequence FROM currentValue ' \
         'WHERE robot_id = "' + robot_id + '";'
     cur.execute(q)
 
@@ -133,10 +133,10 @@ def get_all_alarm(start_ts, end_ts):
         return Logic['SUCCESS'], res
 
 
-def save_value(robot_id, ts, value):
+def save_value(robot_id, ts, value, sequence):
     # q1 = "UPDATE currentValue SET ts = {}, value = '{}' WHERE robot_id = '{}';".format(ts, value, robot_id)
 
-    q1 = "REPLACE INTO currentValue (robot_id, ts, value) VALUES ('{}', {}, '{}');".format(robot_id, ts, value)
+    q1 = "REPLACE INTO currentValue (robot_id, ts, value, sequence) VALUES ('{}', {}, '{}', {});".format(robot_id, ts, value, sequence)
     q2 = "INSERT INTO loggedValue (robot_id, ts, value) VALUES ('{}', {}, '{}');".format(robot_id, ts, value)
     try:
         print(TermColor['BOLD'] + q1)
@@ -155,8 +155,8 @@ def save_value(robot_id, ts, value):
 
 
 def save_alarm(robot_id, ts, value):
-    q = 'INSERT INTO loggedValue (robot_id, ts, value)' \
-        'VALUES (' + robot_id + ', ' + ts + ', ' + value + ');'
+    q = 'INSERT INTO loggedValue (robot_id, ts, value) ' \
+        'VALUES (' + robot_id + ', ' + str(ts) + ', ' + value + ');'
 
     try:
         print(TermColor['BOLD'] + q)

@@ -12,12 +12,17 @@ def timed_checking():
     while True:
         # Invoke scanning every 60 secs
         try:
-            print(TermColor['OK'] + 'Start checking robots...')
-            check_robots()
-            time.sleep(60)
+            print(TermColor['WARNING'] + 'Start checking robots...', end=' ')
+            err = check_robots()
+
+            if not err:
+                print(TermColor['OK'] + 'Done!')
 
         except Exception as e:
             print(TermColor['FAIL'] + str(e))
+
+        finally:
+            time.sleep(60)
 
 
 if __name__ == "__main__":

@@ -11,9 +11,10 @@ def on_message(client, userdata, msg):
     robot_id = topic[2]
     message = loads(msg.payload)
     state = message['state']
+    sequence = message['sequenceNumber']
     ts = string_to_epoch(message['time'])
     print("Content:", robot_id, state, ts)
-    ep.save_telemetry(robot_id, ts, state)
+    ep.save_telemetry(robot_id, ts, state, sequence)
 
 
 def string_to_epoch(string):
@@ -24,7 +25,7 @@ def string_to_epoch(string):
     minute = int(string[14:16])
     second = int(string[17:19])
     millisecond = int(string[20:23])
-    epoch = int(datetime(year, month, day, hour, minute, second).strftime('%s')) * 1000 + millisecond + TIMEZONE_DIFF
+    epoch = int(datetime(year, month, day, hour, minute, second).timestamp()) * 1000 + millisecond + TIMEZONE_DIFF
     return epoch
 
 
