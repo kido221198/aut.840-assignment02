@@ -78,7 +78,7 @@ def get_current_values():
 
 
 def get_logged_values(robot_id, start_ts, end_ts):
-    q = 'SELECT ts, value FROM currentValue ' \
+    q = 'SELECT ts, value FROM loggedValue ' \
         'WHERE robot_id = "' + robot_id + '" ' \
         'AND ts BETWEEN ' + str(start_ts) + ' AND ' + str(end_ts) + ';'
     cur.execute(q)
@@ -155,8 +155,7 @@ def save_value(robot_id, ts, value, sequence):
 
 
 def save_alarm(robot_id, ts, value):
-    q = 'INSERT INTO loggedValue (robot_id, ts, value) ' \
-        'VALUES (' + robot_id + ', ' + str(ts) + ', ' + value + ');'
+    q = "INSERT INTO alarm (robot_id, ts, value) VALUES ('{}', {}, '{}');".format(robot_id, ts, value)
 
     try:
         print(TermColor['BOLD'] + q)

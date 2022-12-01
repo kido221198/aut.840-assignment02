@@ -4,6 +4,9 @@ from flask import Flask, render_template, request, redirect, url_for
 from json import dumps
 app = Flask(__name__)
 
+host = '127.0.0.1'
+port = '5000'
+
 
 @app.route('/')
 def index():  # put application's code here
@@ -12,12 +15,28 @@ def index():  # put application's code here
 
 @app.route('/robot')
 def robot_page():  # put application's code here
-    return render_template('robot.html')
+    host_ip = 'http://' + host + ':' + port
+    return render_template('robot.html', host_ip=host_ip)
 
 
 @app.route('/alarm')
 def alarm_page():  # put application's code here
     return render_template('alarm.html')
+
+
+@app.route('/api/analysis')
+def analysis(robot_id):
+    end_ts = request.args.get('end_ts', default=None, type=int)
+    start_ts = request.args.get('start_ts', default=None, type=int)
+
+    err, res = ep.historical_data(robot_id, start_ts, end_ts)
+    return dumps(res), STATUS_CODE[err]
+
+
+@app.route('/api/telemetries')
+def telemetries():  # put application's code here
+    err, res = ep.get_latest_telemetries()
+    return dumps(res), STATUS_CODE[err]
 
 
 @app.route('/api/telemetry/<robot_id>')
@@ -55,4 +74,4 @@ def get_alarm(robot_id):
 
 def flask_server():
     print(TermColor['OK'] + 'Flask is running...')
-    app.run(host='127.0.0.1', port='5001')
+    app.run(host=host, port=port)

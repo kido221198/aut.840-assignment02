@@ -63,7 +63,7 @@ def save_telemetry(robot_id, ts, value, sequence):
             if prev_sequence and sequence > prev_sequence + 1:
                 rp.save_alarm(robot_id, ts, 'Missed message(s)!')
 
-            if 'DOWN' in value:
+            if value == 'DOWN':
                 save_alarm(robot_id, ts + 1, 'Robot is down!')
 
             err = rp.save_value(robot_id, ts, value, sequence)
