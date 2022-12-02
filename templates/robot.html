@@ -5,6 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="../static/styles.css" type="text/css">
     <title>ROBOT</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script>
+        const url_telemetries = '{{ host_ip }}' + '/api/telemetries';
+        const url_history = '{{ host_ip }}' + '/api/history';
+        const url_analysis = '{{ host_ip }}' + '/api/analysis';
+        let tzoffset = (new Date()).getTimezoneOffset() * 60000;
+        let history = [];
+        let historical_data = {};
+        //Run a function every 10000 ms
+        window.setInterval(function () {
+            $.get(url_telemetries, function (data) {
+                let json = JSON.parse(data);
+                json.forEach(function (row) {
+                    let {robot_id, value, ts} = row;
+                    let id = robot_id.slice(3);
+                    let date = (new Date(ts - tzoffset)).toISOString()
+                    $('#state' + id).text(value);
+                    $('#ts' + id).text(date.slice(0, 10) + " " + date.slice(11, 19));
+                });
+            });
+        }, 10000);
+
+        function getRobotData() {
+            let end_ts = $("#end_ts").val();
+            let start_ts = $("#start_ts").val();
+            let robot_id = $("#robot_id").val();
+            end_ts = new Date(end_ts).getTime() - tzoffset;
+            start_ts = new Date(start_ts).getTime() - tzoffset;
+            console.log(start_ts, end_ts, robot_id);
+            let url_robot_history = url_history + '/' + robot_id + '?start_ts=' + start_ts + '&end_ts=' + end_ts;
+            let url_robot_analysis = url_analysis + '/' + robot_id + '?start_ts=' + start_ts + '&end_ts=' + end_ts
+            $.get(url_robot_history, function (data) {
+                history = JSON.parse(data);
+                console.log(history);
+            });
+            {#$.get(url_robot_analysis, function (data) {#}
+            {#    historical_data = JSON.parse(data);#}
+            {# });#}
+        }
+    </script>
 </head>
 <body>
 <div>
@@ -108,7 +148,48 @@
         </div>
     </div>
     <div class="column">
+        <div class="row">
+            <table>
+                <tr>
+                    <td>
 
+                        <label for="robot_id">Choose a robot: </label>
+                        <select id="robot_id" name="robot">
+                            <option value="rob1" selected>Robot 01</option>
+                            <option value="rob2">Robot 02</option>
+                            <option value="rob3">Robot 03</option>
+                            <option value="rob4">Robot 04</option>
+                            <option value="rob5">Robot 05</option>
+                            <option value="rob6">Robot 06</option>
+                            <option value="rob7">Robot 07</option>
+                            <option value="rob8">Robot 08</option>
+                            <option value="rob9">Robot 09</option>
+                            <option value="rob10">Robot 10</option>
+                        </select>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="start_ts">From:</label>
+                        <input type="datetime-local" id="start_ts"
+                               name="start_ts" value="2022-12-01T00:00"
+                               min="2022-12-01T00:00" max="2022-12-31T23:59"/>
+                    </td>
+                    <td>
+                        <label for="end_ts"> to: </label>
+                        <input type="datetime-local" id="end_ts"
+                               name="end_ts" value="2022-12-01T00:00"
+                               min="2022-12-01T00:00" max="2022-12-31T23:59"/>
+                    </td>
+                <tr>
+                    <td>
+                        <button type="button" onclick="getRobotData()">Search!</button>
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
     </div>
 </div>
 </body>
