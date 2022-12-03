@@ -168,6 +168,47 @@ def historical_data(robot_id, start_ts, end_ts):
 
     if err:
         print(TermColor['FAIL'] + 'Endpoint error code:', str(err))
+        return err, res
+
+    elif res:
+        summary = {'READY-IDLE-STARVED': {'time': 0, 'count': 0},
+                   'READY-PROCESSING-EXECUTING': {'time': 0, 'count': 0},
+                   'DOWN': {'time': 0, 'count': 0}}
+
+        # idle_time = 0
+        # processing_time = 0
+        # down_time = 0
+        # idle_count = 0
+        # processing_count = 0
+        # down_time = 0
+
+        total_time = end_ts - res[0]['ts']
+        res.reverse()
+        prev_value = res[0]['value']
+        prev_ts = res[0]['ts']
+        summary[prev_value]['time'] += end_ts - prev_ts
+
+        # summary[prev_value]['count'] = 1
+        # prev_value = ''
+        # prev_ts = 0
+
+        for i in range(1, len(res)):
+            ts = res[i]['ts']
+            value = res[i]['value']
+            print(value, ts)
+
+            if prev_value != value:
+                summary[value]['count'] += 1
+
+            summary[value]['time'] += prev_ts - ts
+            prev_value = value
+            prev_ts = ts
+
+        for state, data in summary.items():
+            summary[state]['avg'] = round(data['time'] / data['count'] / 1000, 2)
+            summary[state]['percentage'] = round(100 * data['time'] / total_time, 2)
+
+        return Logic['SUCCESS'], summary
 
     else:
-        pass
+        return err, res

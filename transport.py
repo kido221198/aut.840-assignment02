@@ -24,7 +24,7 @@ def alarm_page():  # put application's code here
     return render_template('alarm.html')
 
 
-@app.route('/api/analysis')
+@app.route('/api/analysis/<robot_id>')
 def analysis(robot_id):
     end_ts = request.args.get('end_ts', default=None, type=int)
     start_ts = request.args.get('start_ts', default=None, type=int)

@@ -2,30 +2,196 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="../static/styles.css" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+{#    <link rel="stylesheet" href="../static/styles.css" type="text/css">#}
     <title>ROBOT</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <style>
+
+        body {
+            background-image: url("../static/images/PK_symbols__tuni.png");
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: 30%;
+            background-attachment: fixed;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        a {
+            text-decoration: none;
+            color: black;
+            padding: 2px;
+        }
+
+        a:hover {
+            transition: all 300ms ease-out 100ms;
+            background-color: mediumslateblue;
+            border: 0px solid white;
+            padding: 2px;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .column {
+            float: left;
+            width: 50%;
+            font-size: larger;
+        }
+
+        .column2 {
+            float: left;
+            width: 45%;
+            text-align: center;
+            margin: 2%;
+            border: 2px solid mediumslateblue;
+            background-color: white;
+        }
+
+        .column2:hover {
+            transition: all 300ms ease-out 100ms;
+            width: 45%;
+            border: 2px solid white;
+            text-align: center;
+            background-color: mediumslateblue;
+            margin: 2%;
+            color: white;
+        }
+
+        .row {
+            width: 100%;
+            display: table;
+            clear: both;
+        }
+
+        .cell2 {
+            background-color: #9573D3;
+            color: white;
+        }
+
+        .cell1 {
+            color: red;
+            background-color: #FCD5D5;
+            font-weight: bold;
+        }
+
+        .cell3 {
+            background-color: transparent;
+            color: black;
+        }
+
+    </style>
     <script>
-        const url_telemetries = '{{ host_ip }}' + '/api/telemetries';
-        const url_history = '{{ host_ip }}' + '/api/history';
-        const url_analysis = '{{ host_ip }}' + '/api/analysis';
         let tzoffset = (new Date()).getTimezoneOffset() * 60000;
         let history = [];
         let historical_data = {};
+        let visible = 10;
         //Run a function every 10000 ms
         window.setInterval(function () {
-            $.get(url_telemetries, function (data) {
+            $.get('{{ url_for("telemetries") }}', function (data) {
                 let json = JSON.parse(data);
-                json.forEach(function (row) {
+                let robots = [];
+
+                json.forEach(function(row) {
                     let {robot_id, value, ts} = row;
                     let id = robot_id.slice(3);
-                    let date = (new Date(ts - tzoffset)).toISOString()
+                    robots.push(+id);
+                    let date = (new Date(ts - tzoffset)).toISOString();
+
+                    if (value == 'DOWN')
+                        $('#state' + id).css({"color": "red", "font-weight": "bold"});
+
+                    else
+                        $('#state' + id).css({"color": "purple", "font-weight": "bold"});
+
                     $('#state' + id).text(value);
-                    $('#ts' + id).text(date.slice(0, 10) + " " + date.slice(11, 19));
+                    $('#ts' + id).text("Last update: " + date.slice(0, 10) + " " + date.slice(11, 19));
                 });
+
+                for (let i = 1; i < 11; i++)
+                    if (robots.indexOf(i) == -1) $('#state' + i).text('Asking Luis why it isn\'t working?');
+
             });
         }, 10000);
+
+        function create_history_table() {
+            let table_body = '';
+            let total = history.length;
+            let html_result_action = '<button type="button" onclick="showLess()">Show less</button>';
+            let html_history =
+                '<table width="100%" style="text-align: center; line-height: 30px;">' +
+                        '<colgroup id="myColGroup" span="2" align = "left" width="150">' +
+                            '<col style="width: 40%">' +
+                            '<col style="width: 100%">' +
+                        '</colgroup>' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Timestamp</td>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">State</td>' +
+                            '</tr>' +
+                        '</thead>' +
+                    '<tbody>';
+
+            try {
+                history.forEach(function (row, index) {
+                    if (index < visible) {
+                        let {value, ts} = row;
+                        let date = (new Date(ts)).toISOString();
+                        date = date.slice(0, 10) + " " + date.slice(11, 19);
+
+                        if (value == 'DOWN')
+                            table_body =  table_body + '<tr><td class=cell1>' + date + '</td>' +
+                                                       '<td class=cell1>' + value + '</td></tr>';
+
+                        else if (index % 2)
+                            table_body = table_body + '<tr><td class=cell2>' + date + '</td>' +
+                                                      '<td class=cell2>' + value + '</td></tr>';
+
+                        else
+                            table_body = table_body + '<tr><td class=cell3>' + date + '</td>' +
+                                                      '<td class=cell3>' + value + '</td></tr>';
+                    }
+
+                    else
+                        throw Error('Break');
+                });
+            } catch (e) {
+                if (e.message != 'Break')
+                    throw e;
+
+                else {
+                    html_result_action = '<button type="button" onclick="showMore()">Show more</button>' +
+                                             '<button type="button" onclick="showAll()">Show all</button>';
+
+                    if (visible > 10)
+                        html_result_action = '<button type="button" onclick="showLess()">Show less</button>' +
+                                                html_result_action;
+                }
+            }
+
+            html_history = html_history + table_body + '</tbody></table>';
+
+            $('#result_action').html(html_result_action);
+            $('#result').text('Showing ' + visible + ' of ' + total + ' results');
+            $('#history_section').html(html_history);
+        }
+
+        function showMore() {
+            visible += 10;
+            create_history_table();
+        }
+
+        function showAll() {
+            visible = history.length;
+            create_history_table();
+        }
+
+        function showLess() {
+            visible -= 10;
+            create_history_table();
+        }
 
         function getRobotData() {
             let end_ts = $("#end_ts").val();
@@ -33,12 +199,12 @@
             let robot_id = $("#robot_id").val();
             end_ts = new Date(end_ts).getTime() - tzoffset;
             start_ts = new Date(start_ts).getTime() - tzoffset;
-            console.log(start_ts, end_ts, robot_id);
-            let url_robot_history = url_history + '/' + robot_id + '?start_ts=' + start_ts + '&end_ts=' + end_ts;
-            let url_robot_analysis = url_analysis + '/' + robot_id + '?start_ts=' + start_ts + '&end_ts=' + end_ts
+            let url_robot_history = '{{ url_for('history', robot_id='rid') }}'.replace('rid', robot_id) + '?start_ts=' + start_ts + '&end_ts=' + end_ts;
+            let url_robot_analysis = '{{ url_for('analysis', robot_id='rid') }}'.replace('rid', robot_id) + '?start_ts=' + start_ts + '&end_ts=' + end_ts;
             $.get(url_robot_history, function (data) {
-                history = JSON.parse(data);
-                console.log(history);
+                history = JSON.parse(data).reverse();
+                visible = history.length > 10 ? 10 : history.length;
+                create_history_table();
             });
             {#$.get(url_robot_analysis, function (data) {#}
             {#    historical_data = JSON.parse(data);#}
@@ -48,147 +214,147 @@
 </head>
 <body>
 <div>
-    <h1>
-        <tr>
-            <td><p>Robots</p></td>
-            <td><a href="{{ url_for('alarm_page') }}">Alarms</a></td>
-        </tr>
-    </h1>
-
+    <h1 style="text-align: center">Robots | <a href="{{ url_for('alarm_page') }}">Alarms</a></h1>
 </div>
-
 <div class="row">
     <div class="column">
+        <h2>Overall</h2>
         <div class="row">
-            <div class="column">
-                <div style="width: 340px; height: 208px; position: relative;">
-                    <div font-family="Open Sans"><h3>Robot 1</h3>
+            <div class="column2">
+                <div style="position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 01</h3>
                         <div><p color="#8f8bbeff" id="state1">Getting state</p></div>
-                        <p>Last Updated: <span id="ts1"></span></p>
+                       <p id="ts1"></p>
                     </div>
                 </div>
-
             </div>
-            <div class="column">
-                <div style="width: 340px; height: 208px; position: relative;">
-                    <div font-family="Open Sans"><h3>Robot 2</h3>
+            <div class="column2">
+                <div style="position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 02</h3>
                         <div><p color="#8f8bbeff" id="state2">Getting state</p></div>
-                        <p>Last Updated: <span id="ts2"></span></p>
+                       <p id="ts2"></p>
                     </div>
                 </div>
             </div>
-            <div class="column">
-                <div style="width: 340px; height: 208px; position: relative;">
-                    <div font-family="Open Sans"><h3>Robot 3</h3>
+        </div>
+        <div class="row">
+            <div class="column2">
+                <div style="position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 03</h3>
                         <div><p color="#8f8bbeff" id="state3">Getting state</p></div>
-                        <p>Last Updated: <span id="ts3"></span></p>
+                       <p id="ts3"></p>
                     </div>
                 </div>
             </div>
-            <div class="column" style="align-content: center">
-                <div style="width: 340px; height: 208px; position: relative;">
-                    <div font-family="Open Sans"><h3>Robot 4</h3>
+            <div class="column2" style="align-content: center">
+                <div style="position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 04</h3>
                         <div><p color="#8f8bbeff" id="state4">Getting state</p></div>
-                        <p>Last Updated: <span id="ts4"></span></p>
+                       <p id="ts4"></p>
                     </div>
                 </div>
             </div>
         </div>
         <div class="row">
-            <div class="column">
-                <div style="width: 340px; height: 208px; position: relative;">
-                    <div font-family="Open Sans"><h3>Robot 5</h3>
+            <div class="column2">
+                <div style="position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 05</h3>
                         <div><p color="#8f8bbeff" id="state5">Getting state</p></div>
-                        <p>Last Updated: <span id="ts5"></span></p>
+                       <p id="ts5"></p>
                     </div>
                 </div>
             </div>
-            <div class="column">
-                <div style="width: 340px; height: 208px; position: relative;">
-                    <div font-family="Open Sans"><h3>Robot 6</h3>
+            <div class="column2">
+                <div style="position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 06</h3>
                         <div><p color="#8f8bbeff" id="state6">Getting state</p></div>
-                        <p>Last Updated: <span id="ts6"></span></p>
-                    </div>
-                </div>
-            </div>
-            <div class="column">
-                <div style="width: 340px; height: 208px; position: relative;">
-                    <div font-family="Open Sans"><h3>Robot 7</h3>
-                        <div><p color="#8f8bbeff" id="state7">Getting state</p></div>
-                        <p>Last Updated: <span id="ts7"></span></p>
-                    </div>
-                </div>
-            </div>
-            <div class="column">
-                <div style="width: 340px; height: 208px; position: relative;">
-                    <div font-family="Open Sans"><h3>Robot 8</h3>
-                        <div><p color="#8f8bbeff" id="state8">Getting state</p></div>
-                        <p>Last Updated: <span id="ts8"></span></p>
+                       <p id="ts6"></p>
                     </div>
                 </div>
             </div>
         </div>
         <div class="row">
-            <div class="column">
-                <div style="width: 340px; height: 208px; position: relative;">
-                    <div font-family="Open Sans"><h3>Robot 9</h3>
-                        <div><p color="#8f8bbeff" id="state9">Getting state</p></div>
-                        <p>Last Updated: <span id="ts9"></span></p>
+            <div class="column2">
+                <div style="position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 07</h3>
+                        <div><p color="#8f8bbeff" id="state7">Getting state</p></div>
+                       <p id="ts7"></p>
                     </div>
                 </div>
             </div>
-            <div class="column">
-                <div style="width: 340px; height: 208px; position: relative;">
+            <div class="column2">
+                <div style="position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 08</h3>
+                        <div><p color="#8f8bbeff" id="state8">Getting state</p></div>
+                       <p id="ts8"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="column2">
+                <div style="position: relative;">
+                    <div font-family="Open Sans"><h3>Robot 09</h3>
+                        <div><p color="#8f8bbeff" id="state9">Getting state</p></div>
+                       <p id="ts9"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="column2">
+                <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 10</h3>
                         <div><p color="#8f8bbeff" id="state10">Getting state</p></div>
-                        <p>Last Updated: <span id="ts10"></span></p>
+                       <p id="ts10"></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="column">
-        <div class="row">
-            <table>
-                <tr>
-                    <td>
-
-                        <label for="robot_id">Choose a robot: </label>
-                        <select id="robot_id" name="robot">
-                            <option value="rob1" selected>Robot 01</option>
-                            <option value="rob2">Robot 02</option>
-                            <option value="rob3">Robot 03</option>
-                            <option value="rob4">Robot 04</option>
-                            <option value="rob5">Robot 05</option>
-                            <option value="rob6">Robot 06</option>
-                            <option value="rob7">Robot 07</option>
-                            <option value="rob8">Robot 08</option>
-                            <option value="rob9">Robot 09</option>
-                            <option value="rob10">Robot 10</option>
-                        </select>
-                    </td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>
-                        <label for="start_ts">From:</label>
-                        <input type="datetime-local" id="start_ts"
-                               name="start_ts" value="2022-12-01T00:00"
-                               min="2022-12-01T00:00" max="2022-12-31T23:59"/>
-                    </td>
-                    <td>
-                        <label for="end_ts"> to: </label>
-                        <input type="datetime-local" id="end_ts"
-                               name="end_ts" value="2022-12-01T00:00"
-                               min="2022-12-01T00:00" max="2022-12-31T23:59"/>
-                    </td>
-                <tr>
-                    <td>
-                        <button type="button" onclick="getRobotData()">Search!</button>
-                    </td>
-                    <td></td>
-                </tr>
-            </table>
+        <h2>Specific view</h2>
+        <div style="margin-left: 5%; margin-right: 5%;">
+            <div class="row" width="100%">
+                <table width="100%">
+                    <tr>
+                        <td>
+                            <label for="start_ts">From:</label>
+                            <input type="datetime-local" id="start_ts"
+                                   name="start_ts" value="2022-12-01T00:00"
+                                   min="2022-12-01T00:00" max="2022-12-31T23:59"/>
+                            <label for="end_ts"> to: </label>
+                            <input type="datetime-local" id="end_ts"
+                                   name="end_ts" value="2022-12-31T23:59"
+                                   min="2022-12-01T00:00" max="2022-12-31T23:59"/>
+                        </td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="robot_id">Choose a robot: </label>
+                            <select id="robot_id" name="robot">
+                                <option value="rob1" selected>Robot 01</option>
+                                <option value="rob2">Robot 02</option>
+                                <option value="rob3">Robot 03</option>
+                                <option value="rob4">Robot 04</option>
+                                <option value="rob5">Robot 05</option>
+                                <option value="rob6">Robot 06</option>
+                                <option value="rob7">Robot 07</option>
+                                <option value="rob8">Robot 08</option>
+                                <option value="rob9">Robot 09</option>
+                                <option value="rob10">Robot 10</option>
+                            </select>
+                            <button type="button" onclick="getRobotData()">Search!</button>
+                        </td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td id="result"></td>
+                        <td id="result_action" style="text-align: right;"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="row" id="analysis_section" width="100%"></div>
+            <div class="row" id="history_section" width="100%"></div>
         </div>
     </div>
 </div>
