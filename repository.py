@@ -117,7 +117,8 @@ def get_alarm_by_robot(robot_id, start_ts, end_ts):
 
 def get_all_alarm(start_ts, end_ts):
     q = 'SELECT ts, robot_id, value FROM alarm ' \
-        'WHERE ts BETWEEN ' + str(start_ts) + ' AND ' + str(end_ts) + ';'
+        'WHERE ts BETWEEN ' + str(start_ts) + ' AND ' + str(end_ts) + ' ' \
+        'ORDER BY ts ASC;'
     cur.execute(q)
 
     if not cur.rowcount:

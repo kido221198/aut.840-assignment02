@@ -26,8 +26,10 @@ def get_latest_telemetries():
 
 
 def get_history(robot_id, start_ts, end_ts):
-    if not end_ts:
-        end_ts = int(time()) * 1000
+    current_ts = int(time() * 1000)
+
+    if not end_ts or end_ts > current_ts:
+        end_ts = current_ts
 
     if not start_ts:
         start_ts = end_ts - DEFAULT_TIME_RANGE
@@ -94,8 +96,10 @@ def save_alarm(robot_id, ts, value):
 
 
 def get_alarm_robot(robot_id, start_ts, end_ts):
-    if not end_ts:
-        end_ts = int(time()) * 1000
+    current_ts = int(time() * 1000)
+
+    if not end_ts or end_ts > current_ts:
+        end_ts = current_ts
 
     if not start_ts:
         start_ts = end_ts - DEFAULT_TIME_RANGE
@@ -116,8 +120,10 @@ def get_alarm_robot(robot_id, start_ts, end_ts):
 
 
 def get_alarms(start_ts, end_ts):
-    if not end_ts:
-        end_ts = int(time()) * 1000
+    current_ts = int(time() * 1000)
+
+    if not end_ts or end_ts > current_ts:
+        end_ts = current_ts
 
     if not start_ts:
         start_ts = end_ts - DEFAULT_TIME_RANGE
@@ -155,8 +161,10 @@ def check_robots():
 
 
 def historical_data(robot_id, start_ts, end_ts):
-    if not end_ts:
-        end_ts = int(time()) * 1000
+    current_ts = int(time() * 1000)
+
+    if not end_ts or end_ts > current_ts:
+        end_ts = current_ts
 
     if not start_ts:
         start_ts = end_ts - DEFAULT_TIME_RANGE
@@ -170,7 +178,7 @@ def historical_data(robot_id, start_ts, end_ts):
         print(TermColor['FAIL'] + 'Endpoint error code:', str(err))
         return err, res
 
-    elif res:
+    else:
         summary = {'READY-IDLE-STARVED': {'time': 0, 'count': 0},
                    'READY-PROCESSING-EXECUTING': {'time': 0, 'count': 0},
                    'DOWN': {'time': 0, 'count': 0}}
@@ -195,7 +203,6 @@ def historical_data(robot_id, start_ts, end_ts):
         for i in range(1, len(res)):
             ts = res[i]['ts']
             value = res[i]['value']
-            print(value, ts)
 
             if prev_value != value:
                 summary[value]['count'] += 1
@@ -205,10 +212,14 @@ def historical_data(robot_id, start_ts, end_ts):
             prev_ts = ts
 
         for state, data in summary.items():
-            summary[state]['avg'] = round(data['time'] / data['count'] / 1000, 2)
             summary[state]['percentage'] = round(100 * data['time'] / total_time, 2)
+            summary[state]['avg'] = 0
+
+            if data['count'] > 0:
+                summary[state]['avg'] = round(data['time'] / data['count'] / 1000, 2)
+
+            summary[state]['time'] = round(data['time'] / 1000)
 
         return Logic['SUCCESS'], summary
 
-    else:
-        return err, res
+

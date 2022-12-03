@@ -88,7 +88,7 @@
         }
 
         .detail-table tr td {
-            font-size: 13px;
+            font-size: 15px;
         }
 
     </style>
@@ -100,31 +100,28 @@
         let history = [];
         let historical_data = {};
         let visible = 10;
+        let all_options = true;
 
         //Run a function every 10000 ms
         window.setInterval(function () {
-            $.get('{{ url_for("telemetries") }}', function (data) {
-                let json = JSON.parse(data);
+            $.get('{{ url_for("get_alarms") }}', function (data) {
+                let json = JSON.parse(data).reverse();
                 let robots = [];
 
                 json.forEach(function(row) {
                     let {robot_id, value, ts} = row;
-                    let id = robot_id.slice(3);
-                    robots.push(+id);
+                    let id = +robot_id.slice(3);
+                    if (robots.indexOf(id) > -1)
+                        return;
+                    robots.push(id);
                     let date = (new Date(ts - tzoffset)).toISOString();
 
-                    if (value == 'DOWN')
-                        $('#state' + id).css({"color": "red", "font-weight": "bold"});
-
-                    else
-                        $('#state' + id).css({"color": "purple", "font-weight": "bold"});
-
-                    $('#state' + id).text(value);
-                    $('#ts' + id).text("Last update: " + date.slice(0, 10) + " " + date.slice(11, 19));
+                    $('#state' + id).text('Last alarm: ' + value);
+                    $('#ts' + id).text("Time: " + date.slice(0, 10) + " " + date.slice(11, 19));
                 });
 
                 for (let i = 1; i < 11; i++)
-                    if (robots.indexOf(i) == -1) $('#state' + i).text('Asking Luis why it isn\'t working?');
+                    if (robots.indexOf(i) == -1) $('#state' + i).text('No alarms were found');
 
             });
         }, 10000);
@@ -137,12 +134,12 @@
                 '<table width="100%" style="text-align: center; line-height: 30px;">' +
                         '<colgroup id="myColGroup" span="2" align = "left" width="150">' +
                             '<col style="width: 40%">' +
-                            '<col style="width: 100%">' +
+                            '<col style="width: 60%">' +
                         '</colgroup>' +
                         '<thead>' +
                             '<tr>' +
                                 '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Timestamp</td>' +
-                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">State</td>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Message</td>' +
                             '</tr>' +
                         '</thead>' +
                     '<tbody>';
@@ -154,11 +151,7 @@
                         let date = (new Date(ts)).toISOString();
                         date = date.slice(0, 10) + " " + date.slice(11, 19);
 
-                        if (value == 'DOWN')
-                            table_body =  table_body + '<tr><td class=cell1>' + date + '</td>' +
-                                                       '<td class=cell1>' + value + '</td></tr>';
-
-                        else if (index % 2)
+                        if (index % 2)
                             table_body = table_body + '<tr><td class=cell2>' + date + '</td>' +
                                                       '<td class=cell2>' + value + '</td></tr>';
 
@@ -191,30 +184,119 @@
             $('#history_section').html(html_history);
         }
 
+        function create_history_table_all() {
+            let table_body = '';
+            let total = history.length;
+            let html_result_action = '<button type="button" onclick="showLess()">Show less</button>';
+            let html_history =
+                '<table width="100%" style="text-align: center; line-height: 30px;">' +
+                        '<colgroup id="myColGroup" span="3" align = "left" width="150">' +
+                            '<col style="width: 30%">' +
+                            '<col style="width: 20%">' +
+                            '<col style="width: 50%">' +
+                        '</colgroup>' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Timestamp</td>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Robot</td>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Message</td>' +
+                            '</tr>' +
+                        '</thead>' +
+                    '<tbody>';
+
+            try {
+                history.forEach(function (row, index) {
+                    if (index < visible) {
+                        let {value, ts, robot_id} = row;
+                        let date = (new Date(ts)).toISOString();
+                        date = date.slice(0, 10) + " " + date.slice(11, 19);
+                        robot_id = 'Robot ' + robot_id.slice(3);
+
+                        if (index % 2)
+                            table_body = table_body + '<tr><td class=cell2>' + date + '</td>' +
+                                                      '<td class=cell2>' + robot_id + '</td>' +
+                                                      '<td class=cell2>' + value + '</td></tr>';
+
+                        else
+                            table_body = table_body + '<tr><td class=cell3>' + date + '</td>' +
+                                                      '<td class=cell3>' + robot_id + '</td>' +
+                                                      '<td class=cell3>' + value + '</td></tr>';
+                    }
+
+                    else
+                        throw Error('Break');
+                });
+            } catch (e) {
+                if (e.message != 'Break')
+                    throw e;
+
+                else {
+                    html_result_action = '<button type="button" onclick="showMore()">Show more</button>' +
+                                             '<button type="button" onclick="showAll()">Show all</button>';
+
+                    if (visible > 10)
+                        html_result_action = '<button type="button" onclick="showLess()">Show less</button>' +
+                                                html_result_action;
+                }
+            }
+
+            html_history = html_history + table_body + '</tbody></table>';
+
+            $('#result_action').html(html_result_action);
+            $('#result').text('Showing ' + visible + ' of ' + total + ' results');
+            $('#history_section').html(html_history);
+        }
+
         function showMore() {
             visible += 10;
-            create_history_table();
+
+            if (all_options)
+                create_history_table_all();
+            else
+                create_history_table();
         }
 
         function showAll() {
             visible = history.length;
-            create_history_table();
+
+            if (all_options)
+                create_history_table_all();
+            else
+                create_history_table();
         }
 
         function showLess() {
             visible -= 10;
-            create_history_table();
+
+            if (all_options)
+                create_history_table_all();
+            else
+                create_history_table();
         }
 
         function drawChart(input) {
-            let array = [['Event', 'Counted number']]
+            let array = [['Alarm', 'Counted number']]
 
             for (let key in input)
-                array.push([key, input[key]['count']]);
+                array.push([key, input[key]]);
 
             let data = google.visualization.arrayToDataTable(array);
             // Optional; add a title and set the width and height of the chart
-            let options = {'title':'Events Occurrences'};
+            let options = {'title':'Alarms Occurrences'};
+            // Display the chart inside the <div> element with id="piechart"
+            let chart = new google.visualization.PieChart(document.getElementById('piechart'));
+            chart.draw(data, options);
+        }
+
+        function drawChartAll(input) {
+            let array = [['Alarm', 'Counted number']]
+
+            for (let key in input)
+                array.push([key, input[key]['total']]);
+
+            let data = google.visualization.arrayToDataTable(array);
+            // Optional; add a title and set the width and height of the chart
+            let options = {'title':'Alarms Occurrences'};
             // Display the chart inside the <div> element with id="piechart"
             let chart = new google.visualization.PieChart(document.getElementById('piechart'));
             chart.draw(data, options);
@@ -222,44 +304,58 @@
 
         function detailTable(input) {
             let html_detail_table =
-                '<table width="100%" class=detail-table style="margin: 0 auto; align-self: center; text-align: center; line-height: 40px;">' +
-                        '<colgroup id="myColGroup" span="4" align = "left" width="150">' +
-                            '<col style="width: 20%">' +
-                            '<col style="width: 20%">' +
+                '<table width="100%" class=detail-table style="margin: 0 auto; align-self: center; text-align: center; line-height: 50px;">' +
+                        '<colgroup id="myColGroup" span="2" align = "left" width="150">' +
+                            '<col style="width: 60%">' +
                             '<col style="width: 40%">' +
-                            '<col style="width: 20%">' +
                         '</colgroup>' +
                         '<thead>' +
                             '<tr>' +
-                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Event</td>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Alarm</td>' +
                                 '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Count</td>' +
-                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Total Duration</td>' +
-                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Avg.</td>' +
                             '</tr>' +
                         '</thead>' +
                     '<tbody>';
 
             let table_body = '';
 
-            for (let key in input) {
-                let event = 'DOWN';
+            for (let key in input)
+                html_detail_table = html_detail_table + '<tr><td class=cell3>' + key + '</td>' +
+                                                        '<td class=cell3>' + input[key] + '</td></tr>';
 
-                if (key.indexOf('IDLE') > -1)
-                    event = 'IDLE';
+            html_detail_table = html_detail_table + table_body + '</tbody></table>';
+            $('#details').html(html_detail_table);
+        }
 
-                else if (key.indexOf('PROCESSING') > -1)
-                    event = 'PROCESSING';
+        function detailTableAll(input) {
+            let html_detail_table =
+                '<table width="100%" class=detail-table style="margin: 0 auto; align-self: center; text-align: center; line-height: 50px;">' +
+                        '<colgroup id="myColGroup" span="5" align = "left" width="150">' +
+                            '<col style="width: 20%">' +
+                            '<col style="width: 20%">' +
+                            '<col style="width: 20%">' +
+                            '<col style="width: 20%">' +
+                            '<col style="width: 20%">' +
+                        '</colgroup>' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Robot</td>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Idle</td>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Down</td>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Missed</td>' +
+                                '<td style="background-color: rebeccapurple; color: white; font-weight: bold">Total</td>' +
+                            '</tr>' +
+                        '</thead>' +
+                    '<tbody>';
 
-                let {time, count, percentage, avg} = input[key];
-                let hour = Math.floor(time / 3600);
-                let minute = Math.floor(time % 60 / 60);
-                let second = time % 60 % 60;
-                let readable_time = hour + 'h ' + minute + 'm ' + second + 's '
-                html_detail_table = html_detail_table + '<tr><td class=cell3>' + event + '</td>' +
-                                                        '<td class=cell3>' + count + '</td>' +
-                                                        '<td class=cell3>' + readable_time + '(' + percentage + '%)</td>' +
-                                                        '<td class=cell3>' + avg + 's</td></tr>';
-            }
+            let table_body = '';
+
+            for (let key in input)
+                html_detail_table = html_detail_table + '<tr><td class=cell3>' + key + '</td>' +
+                                                        '<td class=cell3>' + input[key]['idle'] + '</td>' +
+                                                        '<td class=cell3>' + input[key]['down'] + '</td>' +
+                                                        '<td class=cell3>' + input[key]['missed'] + '</td>' +
+                                                        '<td class=cell3>' + input[key]['total'] + '</td></tr>';
 
             html_detail_table = html_detail_table + table_body + '</tbody></table>';
             $('#details').html(html_detail_table);
@@ -271,26 +367,66 @@
             let robot_id = $("#robot_id").val();
             end_ts = new Date(end_ts).getTime() - tzoffset;
             start_ts = new Date(start_ts).getTime() - tzoffset;
-            let url_robot_history = '{{ url_for('history', robot_id='rid') }}'.replace('rid', robot_id) + '?start_ts=' + start_ts + '&end_ts=' + end_ts;
-            let url_robot_analysis = '{{ url_for('analysis', robot_id='rid') }}'.replace('rid', robot_id) + '?start_ts=' + start_ts + '&end_ts=' + end_ts;
-            $.get(url_robot_history, function (data) {
-                history = JSON.parse(data).reverse();
-                visible = history.length > 10 ? 10 : history.length;
-                create_history_table();
-            });
-            setTimeout(function() {
-                $.get(url_robot_analysis, function (data) {
-                    let historical_data = JSON.parse(data);
-                    detailTable(historical_data);
-                    drawChart(historical_data);
+
+            if (robot_id != 'all') {
+                all_options = false;
+                let url_robot_history = '{{ url_for('get_alarm', robot_id='rid') }}'.replace('rid', robot_id) + '?start_ts=' + start_ts + '&end_ts=' + end_ts;
+                $.get(url_robot_history, function (data) {
+                    history = JSON.parse(data).reverse();
+                    visible = history.length > 10 ? 10 : history.length;
+                    create_history_table();
+                    let arr = {};
+                    history.forEach(function (row) {
+                        let {value} = row;
+
+                        if (!(value in arr))
+                            arr[value] = 0;
+
+                        arr[value] += 1;
+                    });
+                    detailTable(arr);
+                    drawChart(arr);
                 });
-            }, 500);
+            }
+
+            else {
+                all_options = true;
+                let url_robot_history_all = '{{ url_for('get_alarms') }}' + '?start_ts=' + start_ts + '&end_ts=' + end_ts;
+                $.get(url_robot_history_all, function (data) {
+                    history = JSON.parse(data).reverse();
+                    visible = history.length > 10 ? 10 : history.length;
+                    create_history_table_all();
+                    let arr = {};
+
+                    history.forEach(function (row) {
+                        let {value, robot_id} = row;
+                        robot_id = 'Robot ' + robot_id.slice(3);
+
+                        if (!(robot_id in arr))
+                            arr[robot_id] = {'missed': 0, 'idle': 0, 'down': 0, 'total': 0};
+
+                        if (value.indexOf('Missed') > -1)
+                            arr[robot_id]['missed'] += 1;
+
+                        else if (value.indexOf('Down') > -1)
+                            arr[robot_id]['down'] += 1;
+
+                        else
+                            arr[robot_id]['idle'] += 1;
+
+                        arr[robot_id]['total'] += 1;
+                    });
+
+                    detailTableAll(arr);
+                    drawChartAll(arr);
+                });
+            }
         }
     </script>
 </head>
 <body>
 <div>
-    <h1 style="text-align: center">Robots | <a href="{{ url_for('alarm_page') }}">Alarms</a></h1>
+    <h1 style="text-align: center"><a href="{{ url_for('robot_page') }}">Robots</a> | Alarms</h1>
 </div>
 <div class="row">
     <div class="column">
@@ -299,7 +435,7 @@
             <div class="column2">
                 <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 01</h3>
-                        <div><p color="#8f8bbeff" id="state1">Getting state</p></div>
+                        <div><p color="#8f8bbeff" id="state1">Getting data</p></div>
                        <p id="ts1"></p>
                     </div>
                 </div>
@@ -307,7 +443,7 @@
             <div class="column2">
                 <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 02</h3>
-                        <div><p color="#8f8bbeff" id="state2">Getting state</p></div>
+                        <div><p color="#8f8bbeff" id="state2">Getting data</p></div>
                        <p id="ts2"></p>
                     </div>
                 </div>
@@ -317,7 +453,7 @@
             <div class="column2">
                 <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 03</h3>
-                        <div><p color="#8f8bbeff" id="state3">Getting state</p></div>
+                        <div><p color="#8f8bbeff" id="state3">Getting data</p></div>
                        <p id="ts3"></p>
                     </div>
                 </div>
@@ -325,7 +461,7 @@
             <div class="column2" style="align-content: center">
                 <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 04</h3>
-                        <div><p color="#8f8bbeff" id="state4">Getting state</p></div>
+                        <div><p color="#8f8bbeff" id="state4">Getting data</p></div>
                        <p id="ts4"></p>
                     </div>
                 </div>
@@ -335,7 +471,7 @@
             <div class="column2">
                 <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 05</h3>
-                        <div><p color="#8f8bbeff" id="state5">Getting state</p></div>
+                        <div><p color="#8f8bbeff" id="state5">Getting data</p></div>
                        <p id="ts5"></p>
                     </div>
                 </div>
@@ -343,7 +479,7 @@
             <div class="column2">
                 <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 06</h3>
-                        <div><p color="#8f8bbeff" id="state6">Getting state</p></div>
+                        <div><p color="#8f8bbeff" id="state6">Getting data</p></div>
                        <p id="ts6"></p>
                     </div>
                 </div>
@@ -353,7 +489,7 @@
             <div class="column2">
                 <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 07</h3>
-                        <div><p color="#8f8bbeff" id="state7">Getting state</p></div>
+                        <div><p color="#8f8bbeff" id="state7">Getting data</p></div>
                        <p id="ts7"></p>
                     </div>
                 </div>
@@ -361,7 +497,7 @@
             <div class="column2">
                 <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 08</h3>
-                        <div><p color="#8f8bbeff" id="state8">Getting state</p></div>
+                        <div><p color="#8f8bbeff" id="state8">Getting data</p></div>
                        <p id="ts8"></p>
                     </div>
                 </div>
@@ -371,7 +507,7 @@
             <div class="column2">
                 <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 09</h3>
-                        <div><p color="#8f8bbeff" id="state9">Getting state</p></div>
+                        <div><p color="#8f8bbeff" id="state9">Getting data</p></div>
                        <p id="ts9"></p>
                     </div>
                 </div>
@@ -379,7 +515,7 @@
             <div class="column2">
                 <div style="position: relative;">
                     <div font-family="Open Sans"><h3>Robot 10</h3>
-                        <div><p color="#8f8bbeff" id="state10">Getting state</p></div>
+                        <div><p color="#8f8bbeff" id="state10">Getting data</p></div>
                        <p id="ts10"></p>
                     </div>
                 </div>
@@ -408,7 +544,8 @@
                         <td>
                             <label for="robot_id">Choose a robot: </label>
                             <select id="robot_id" name="robot">
-                                <option value="rob1" selected>Robot 01</option>
+                                <option value="all" selected>All robots</option>
+                                <option value="rob1">Robot 01</option>
                                 <option value="rob2">Robot 02</option>
                                 <option value="rob3">Robot 03</option>
                                 <option value="rob4">Robot 04</option>
