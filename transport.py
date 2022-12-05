@@ -2,7 +2,9 @@ import endpoint as ep
 from common_var import TermColor, STATUS_CODE
 from flask import Flask, render_template, request, redirect, url_for
 from json import dumps
+# from app import transport as app
 app = Flask(__name__)
+
 
 host = '127.0.0.1'
 port = '5000'
@@ -74,4 +76,4 @@ def get_alarm(robot_id):
 
 def flask_server():
     print(TermColor['OK'] + 'Flask is running...')
-    app.run(host=host, port=port)
+    app.run(host=host, port=port, debug=True, use_reloader=False)
