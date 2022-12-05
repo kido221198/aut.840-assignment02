@@ -148,7 +148,7 @@
                 history.forEach(function (row, index) {
                     if (index < visible) {
                         let {value, ts} = row;
-                        let date = (new Date(ts)).toISOString();
+                        let date = (new Date(ts - tzoffset)).toISOString();
                         date = date.slice(0, 10) + " " + date.slice(11, 19);
 
                         if (index % 2)
@@ -208,7 +208,7 @@
                 history.forEach(function (row, index) {
                     if (index < visible) {
                         let {value, ts, robot_id} = row;
-                        let date = (new Date(ts)).toISOString();
+                        let date = (new Date(ts - tzoffset)).toISOString();
                         date = date.slice(0, 10) + " " + date.slice(11, 19);
                         robot_id = 'Robot ' + robot_id.slice(3);
 
@@ -365,8 +365,8 @@
             let end_ts = $("#end_ts").val();
             let start_ts = $("#start_ts").val();
             let robot_id = $("#robot_id").val();
-            end_ts = new Date(end_ts).getTime() - tzoffset;
-            start_ts = new Date(start_ts).getTime() - tzoffset;
+            end_ts = new Date(end_ts).getTime();
+            start_ts = new Date(start_ts).getTime();
 
             if (robot_id != 'all') {
                 all_options = false;
@@ -408,7 +408,7 @@
                         if (value.indexOf('Missed') > -1)
                             arr[robot_id]['missed'] += 1;
 
-                        else if (value.indexOf('Down') > -1)
+                        else if (value.indexOf('down') > -1)
                             arr[robot_id]['down'] += 1;
 
                         else

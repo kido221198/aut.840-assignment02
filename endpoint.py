@@ -62,6 +62,9 @@ def save_telemetry(robot_id, ts, value, sequence):
         else:
             prev_sequence = res['sequence']
 
+            if not sequence:
+                sequence = prev_sequence + 1
+
             if prev_sequence and sequence > prev_sequence + 1:
                 rp.save_alarm(robot_id, ts, 'Missed message(s)!')
 
@@ -183,22 +186,16 @@ def historical_data(robot_id, start_ts, end_ts):
                    'READY-PROCESSING-EXECUTING': {'time': 0, 'count': 0},
                    'DOWN': {'time': 0, 'count': 0}}
 
-        # idle_time = 0
-        # processing_time = 0
-        # down_time = 0
-        # idle_count = 0
-        # processing_count = 0
-        # down_time = 0
+        down_detected = False
+        before_down_ts = 0
+        mtbf = 0
+        time_between_failures = []
 
         total_time = end_ts - res[0]['ts']
         res.reverse()
         prev_value = res[0]['value']
         prev_ts = res[0]['ts']
         summary[prev_value]['time'] += end_ts - prev_ts
-
-        # summary[prev_value]['count'] = 1
-        # prev_value = ''
-        # prev_ts = 0
 
         for i in range(1, len(res)):
             ts = res[i]['ts']
@@ -208,6 +205,15 @@ def historical_data(robot_id, start_ts, end_ts):
                 summary[value]['count'] += 1
 
             summary[value]['time'] += prev_ts - ts
+
+            if prev_value == 'DOWN':
+                down_detected = True
+                before_down_ts = ts
+
+            if value == 'DOWN' and down_detected:
+                time_between_failures.append(before_down_ts - prev_ts)
+                down_detected = False
+
             prev_value = value
             prev_ts = ts
 
@@ -219,6 +225,12 @@ def historical_data(robot_id, start_ts, end_ts):
                 summary[state]['avg'] = round(data['time'] / data['count'] / 1000, 2)
 
             summary[state]['time'] = round(data['time'] / 1000)
+
+        if time_between_failures:
+            for number in time_between_failures:
+                mtbf += number/len(time_between_failures)
+
+        summary['mtbf'] = round(mtbf/1000)
 
         return Logic['SUCCESS'], summary
 

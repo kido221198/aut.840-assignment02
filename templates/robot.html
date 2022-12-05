@@ -151,7 +151,7 @@
                 history.forEach(function (row, index) {
                     if (index < visible) {
                         let {value, ts} = row;
-                        let date = (new Date(ts)).toISOString();
+                        let date = (new Date(ts - tzoffset)).toISOString();
                         date = date.slice(0, 10) + " " + date.slice(11, 19);
 
                         if (value == 'DOWN')
@@ -210,7 +210,8 @@
             let array = [['Event', 'Counted number']]
 
             for (let key in input)
-                array.push([key, input[key]['count']]);
+                if (key != 'mtbf')
+                    array.push([key, input[key]['count']]);
 
             let data = google.visualization.arrayToDataTable(array);
             // Optional; add a title and set the width and height of the chart
@@ -242,6 +243,9 @@
             let table_body = '';
 
             for (let key in input) {
+                if (key == 'mtbf')
+                    continue;
+
                 let event = 'DOWN';
 
                 if (key.indexOf('IDLE') > -1)
@@ -263,14 +267,21 @@
 
             html_detail_table = html_detail_table + table_body + '</tbody></table>';
             $('#details').html(html_detail_table);
+            let mtbf = input['mtbf']
+            let hour = Math.floor(mtbf / 3600);
+            let minute = Math.floor(mtbf % 60 / 60);
+            let second = mtbf % 60 % 60;
+            let readable_time = hour + 'h ' + minute + 'm ' + second + 's '
+            let html_mtbf = '<p>Mean time between failures: ' + readable_time + '</p>';
+            $('#mtbf').html(html_mtbf);
         }
 
         function getRobotData() {
             let end_ts = $("#end_ts").val();
             let start_ts = $("#start_ts").val();
             let robot_id = $("#robot_id").val();
-            end_ts = new Date(end_ts).getTime() - tzoffset;
-            start_ts = new Date(start_ts).getTime() - tzoffset;
+            end_ts = new Date(end_ts).getTime();
+            start_ts = new Date(start_ts).getTime();
             let url_robot_history = '{{ url_for('history', robot_id='rid') }}'.replace('rid', robot_id) + '?start_ts=' + start_ts + '&end_ts=' + end_ts;
             let url_robot_analysis = '{{ url_for('analysis', robot_id='rid') }}'.replace('rid', robot_id) + '?start_ts=' + start_ts + '&end_ts=' + end_ts;
             $.get(url_robot_history, function (data) {
@@ -429,6 +440,7 @@
                 <div class="column" id="details" width="40%" style="align-content: center"></div>
                 <div class="column" id="piechart" width="60%"></div>
             </div>
+            <div class="row" id="mtbf" width="100%"></div>
             <div class="row" width="100%">
                 <table width="100%">
                     <tr>

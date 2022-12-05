@@ -5,21 +5,18 @@ con = None
 cur = None
 
 
-# CREATE TABLE robot (id STRING PRIMARY KEY, manufacturer STRING);
-# CREATE TABLE currentValue (ts INTEGER, robot_id STRING PRIMARY KEY, value STRING);
-# CREATE TABLE loggedValue (ts INTEGER, robot_id STRING, value STRING, PRIMARY KEY (ts, robot_id));
-# CREATE TABLE alarm (ts INTEGER, robot_id STRING, value STRING, PRIMARY KEY (ts, robot_id));
-
 def initialize():
     global con, cur
     con, cur = open_connection()
-    # q1 = 'DELETE FROM currentValue;'
-    # q2 = 'DELETE FROM loggedValue;'
-    # q3 = 'DELETE FROM alarm;'
-    # cur.execute(q1)
-    # cur.execute(q2)
-    # cur.execute(q3)
-    # con.commit()
+    q1 = 'CREATE TABLE IF NOT EXISTS robot (id STRING PRIMARY KEY, manufacturer STRING);'
+    q2 = 'CREATE TABLE IF NOT EXISTS currentValue (ts INTEGER, robot_id STRING PRIMARY KEY, value STRING, sequence INTEGER, FOREIGN KEY (robot_id) REFERENCES robot (robot_id));'
+    q3 = 'CREATE TABLE IF NOT EXISTS loggedValue (ts INTEGER, robot_id STRING, value STRING, PRIMARY KEY (ts, robot_id), FOREIGN KEY (robot_id) REFERENCES robot (robot_id));'
+    q4 = 'CREATE TABLE IF NOT EXISTS alarm (ts INTEGER, robot_id STRING, value STRING, PRIMARY KEY (ts, robot_id), FOREIGN KEY (robot_id) REFERENCES robot (robot_id));'
+    q = [q1, q2, q3, q4]
+
+    for order in q:
+        cur.execute(order)
+        con.commit()
 
 
 def open_connection():

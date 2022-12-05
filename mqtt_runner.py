@@ -29,6 +29,11 @@ def string_to_epoch(string):
     return epoch
 
 
-def mqtt_client():
-    print(TermColor['OK'] + 'MQTT is running...')
-    subscribe.callback(on_message, "ii22/telemetry/+", hostname="broker.hivemq.com")
+def mqtt_client(message='MQTT is running...'):
+    print(TermColor['OK'] + message)
+    try:
+        subscribe.callback(on_message, "ii22/telemetry/+", hostname="broker.hivemq.com")
+
+    except:
+        mqtt_client(message='Revoking MQTT runner...')
+
