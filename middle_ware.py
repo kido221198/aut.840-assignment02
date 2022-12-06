@@ -95,6 +95,5 @@ if __name__ == '__main__':
 
     subscribe_all()
     client.connect(mqtt_host, keepalive=60)
-    app.run(host=host_address, port=port)
     client.publish(mqtt_topic, json.dumps({"script": "Hello World!"}))
-    # app.run()
+    app.run(host=host_address, port=port)
