@@ -91,6 +91,45 @@
             font-size: 15px;
         }
 
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: absolute; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: clip; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content/Box */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 1% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%; /* Could be more or less, depending on screen size */
+            height: 90%;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
     </style>
     <script>
         google.charts.load('current', {'packages':['corechart']});
@@ -101,6 +140,32 @@
         let historical_data = {};
         let visible = 10;
         let all_options = true;
+
+        function padding(input) {
+            return input < 10 ? "0" + input : input;
+        }
+
+        function epoch_to_string(ts) {
+            let hour = new Date(ts).getHours();
+            hour = padding(hour);
+            let minute = new Date(ts).getMinutes();
+            minute = padding(minute);
+            let second = new Date(ts).getSeconds();
+            second = padding(second);
+            let day = new Date(ts).getDate();
+            day = padding(day);
+            let month = new Date(ts).getMonth() + 1;
+            month = padding(month);
+            let year = new Date(ts).getFullYear();
+            return hour + ":" + minute + ":" + second + " " + day + "-" + month + "-" + year;
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
 
         //Run a function every 10000 ms
         window.setInterval(function () {
@@ -114,10 +179,10 @@
                     if (robots.indexOf(id) > -1)
                         return;
                     robots.push(id);
-                    let date = (new Date(ts - tzoffset)).toISOString();
+                    let date = epoch_to_string(ts);
 
                     $('#state' + id).text('Last alarm: ' + value);
-                    $('#ts' + id).text("Time: " + date.slice(0, 10) + " " + date.slice(11, 19));
+                    $('#ts' + id).text("Time: " + date);
                 });
 
                 for (let i = 1; i < 11; i++)
@@ -148,8 +213,7 @@
                 history.forEach(function (row, index) {
                     if (index < visible) {
                         let {value, ts} = row;
-                        let date = (new Date(ts - tzoffset)).toISOString();
-                        date = date.slice(0, 10) + " " + date.slice(11, 19);
+                        let date = epoch_to_string(ts);
 
                         if (index % 2)
                             table_body = table_body + '<tr><td class=cell2>' + date + '</td>' +
@@ -208,8 +272,7 @@
                 history.forEach(function (row, index) {
                     if (index < visible) {
                         let {value, ts, robot_id} = row;
-                        let date = (new Date(ts - tzoffset)).toISOString();
-                        date = date.slice(0, 10) + " " + date.slice(11, 19);
+                        let date = epoch_to_string(ts);
                         robot_id = 'Robot ' + robot_id.slice(3);
 
                         if (index % 2)
@@ -426,7 +489,37 @@
 </head>
 <body>
 <div>
-    <h1 style="text-align: center"><a href="{{ url_for('robot_page') }}">Robots</a> | Alarms</h1>
+    <div class="column" style="width:49%"><h1 style="text-align: right"><a href="{{ url_for('robot_page') }}">Robots</a></h1></div>
+    <div class="column" style="width:2%"><h1 style="text-align: center">|</h1></div>
+    <div class="column" style="width:37%"><h1 style="text-align: left">Alarms</h1></div>
+    <div class="column" style="width:10%"><button id="myBtn" style="float: right;"><img src="../static/images/ppt.png" style="width: 20px; height: 20px;"></button></div>
+{#    <h1 style="text-align: center">Robots | <a href="{{ url_for('alarm_page') }}">Alarms</a></h1>#}
+    <div id="myModal" class="modal">
+    <!-- Modal content -->
+        <div class="modal-content">
+            <center style="width: 100%; height: 100%;"><iframe src="https://tuni-my.sharepoint.com/personal/hoang_m_pham_tuni_fi/_layouts/15/Doc.aspx?sourcedoc={a4233ff7-7eca-4b8e-9e50-54e6be821e73}&amp;action=embedview&amp;wdAr=1.7777777777777777" width="100%" height="100%" frameborder="0">This is an embedded <a target="_blank" href="https://office.com">Microsoft Office</a> presentation, powered by <a target="_blank" href="https://office.com/webapps">Office</a>.</iframe></center>
+        </div>
+    </div>
+    <script>
+        // Get the modal
+        var modal = document.getElementById("myModal");
+        // Get the button that opens the modal
+        var btn = document.getElementById("myBtn");
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+        // When the user clicks the button, open the modal
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) modal.style.display = "none";
+        }
+    </script>
 </div>
 <div class="row">
     <div class="column">
